@@ -1,11 +1,12 @@
 import { useEffect, useState } from 'react';
-import { View, Text, FlatList, ActivityIndicator, Pressable } from 'react-native';
+import { View, Text, FlatList, ActivityIndicator, Pressable, ScrollView, RefreshControl } from 'react-native';
 import { useLocalSearchParams, useNavigation } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { MaterialIcons } from '@expo/vector-icons';
 import { Cidade } from '../src/types/Cidade';
 import { URL_PREVISAO } from '../src/api/config';
 import { useTema } from '../src/context/TemaContext';
+import { mensagemDeErro } from '../src/utils/erro';
 
 type Dia = {
   data: string;
@@ -29,6 +30,7 @@ export default function PrevisaoScreen() {
   const [temperatura, setTemperatura] = useState<number | null>(null);
   const [favorita, setFavorita] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [isRefreshing, setIsRefreshing] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
 
   const cidade: Cidade = {
@@ -40,13 +42,21 @@ export default function PrevisaoScreen() {
     longitude: Number(params.longitude),
   };
 
-  useEffect(() => {
-    navigation.setOptions({ title: cidade.nome });
-    setIsLoading(true);
+  const carregar = (atualizando: boolean) => {
+    if (atualizando) {
+      setIsRefreshing(true);
+    } else {
+      setIsLoading(true);
+    }
     setError(null);
 
     fetch(`${URL_PREVISAO}?latitude=${cidade.latitude}&longitude=${cidade.longitude}&current=temperature_2m&hourly=precipitation_probability&daily=precipitation_probability_max,precipitation_sum,temperature_2m_min,temperature_2m_max&timezone=auto`)
-      .then((res) => res.json())
+      .then((res) => {
+        if (!res.ok) {
+          throw new Error('Resposta inválida da API');
+        }
+        return res.json();
+      })
       .then((data) => {
         const lista = data.daily.time.map((dataDia: string, i: number) => ({
           data: dataDia,
@@ -66,8 +76,16 @@ export default function PrevisaoScreen() {
         setHoras(listaHoras);
         setTemperatura(data.current.temperature_2m);
       })
-      .catch((err) => setError(err.message))
-      .finally(() => setIsLoading(false));
+      .catch((err) => setError(mensagemDeErro(err)))
+      .finally(() => {
+        setIsLoading(false);
+        setIsRefreshing(false);
+      });
+  };
+
+  useEffect(() => {
+    navigation.setOptions({ title: cidade.nome });
+    carregar(false);
 
     AsyncStorage.getItem('cidades_favoritas').then((valor) => {
       const lista: Cidade[] = valor ? JSON.parse(valor) : [];
@@ -104,17 +122,22 @@ export default function PrevisaoScreen() {
 
   if (error) {
     return (
-      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: cores.fundo }}>
-        <Text style={{ color: 'red' }}>Erro: {error}</Text>
-      </View>
+      <ScrollView
+        style={{ backgroundColor: cores.fundo }}
+        contentContainerStyle={{ flexGrow: 1, justifyContent: 'center', alignItems: 'center', padding: 20 }}
+        refreshControl={<RefreshControl refreshing={isRefreshing} onRefresh={() => carregar(true)} />}
+      >
+        <Text style={{ color: 'red', textAlign: 'center' }}>{error}</Text>
+        <Text style={{ color: cores.textoFraco, textAlign: 'center', marginTop: 8 }}>Puxe a tela para baixo para tentar de novo.</Text>
+      </ScrollView>
     );
   }
 
   const hoje = dias[0];
   const vaiChover = hoje && hoje.chance >= 50;
 
-  return (
-    <View style={{ flex: 1, backgroundColor: cores.fundo, padding: 16 }}>
+  const cabecalho = (
+    <View>
       <View style={{ flexDirection: 'row', alignItems: 'center' }}>
         <View style={{ flex: 1 }}>
           <Text style={{ fontSize: 22, fontWeight: 'bold', color: cores.texto }}>{cidade.nome}</Text>
@@ -148,9 +171,17 @@ export default function PrevisaoScreen() {
       />
 
       <Text style={{ fontSize: 18, fontWeight: 'bold', marginTop: 20, marginBottom: 8, color: cores.texto }}>Próximos dias</Text>
+    </View>
+  );
+
+  return (
+    <View style={{ flex: 1, backgroundColor: cores.fundo, padding: 16 }}>
       <FlatList
         data={dias}
         keyExtractor={(item) => item.data}
+        refreshing={isRefreshing}
+        onRefresh={() => carregar(true)}
+        ListHeaderComponent={cabecalho}
         renderItem={({ item }) => (
           <View style={{ flexDirection: 'row', alignItems: 'center', paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: cores.borda }}>
             <Text style={{ width: 60, fontWeight: 'bold', color: cores.texto }}>{formatarData(item.data)}</Text>

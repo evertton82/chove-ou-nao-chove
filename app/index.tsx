@@ -6,6 +6,7 @@ import { MaterialIcons } from '@expo/vector-icons';
 import { Cidade } from '../src/types/Cidade';
 import { URL_CIDADES } from '../src/api/config';
 import { useTema } from '../src/context/TemaContext';
+import { mensagemDeErro } from '../src/utils/erro';
 
 export default function BuscarScreen() {
   const { escuro, cores } = useTema();
@@ -24,7 +25,12 @@ export default function BuscarScreen() {
     setIsLoading(true);
 
     fetch(`${URL_CIDADES}?name=${encodeURIComponent(texto.trim())}&count=10&language=pt`)
-      .then((res) => res.json())
+      .then((res) => {
+        if (!res.ok) {
+          throw new Error('Resposta inválida da API');
+        }
+        return res.json();
+      })
       .then((data) => {
         if (!data.results) {
           setCidades([]);
@@ -41,7 +47,7 @@ export default function BuscarScreen() {
         }));
         setCidades(lista);
       })
-      .catch((err) => setError(err.message))
+      .catch((err) => setError(mensagemDeErro(err)))
       .finally(() => setIsLoading(false));
   };
 

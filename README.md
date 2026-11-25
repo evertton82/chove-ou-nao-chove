@@ -21,10 +21,12 @@ O usuário busca uma cidade e o app responde de forma direta se **vai chover ou 
 | RF07 | Favoritar cidade | O usuário pode marcar ou desmarcar uma cidade como favorita tocando na estrela. |
 | RF08 | Listar favoritas | O app tem uma tela com as cidades favoritas; ao tocar em uma, abre a previsão dela. |
 | RF09 | Tela Sobre | O app tem uma tela com informações do aplicativo e dos alunos responsáveis. |
-| RF10 | Mensagens de erro | O app avisa quando nenhuma cidade for encontrada ou quando não for possível carregar os dados. |
+| RF10 | Mensagens de erro | O app avisa quando nenhuma cidade for encontrada ou quando não for possível carregar os dados. Sem internet, a mensagem é "Sem conexão. Verifique sua internet." (busca e previsão). |
 | RF11 | Alternar tema claro/escuro | O usuário pode trocar entre o tema claro e o escuro tocando no ícone de sol/lua no topo de qualquer tela. |
 | RF12 | Chuva por hora | A tela de previsão mostra a chance de chuva (%) de cada hora que ainda falta no dia, em uma lista horizontal. |
 | RF13 | Usar minha localização | O usuário pode tocar em "Usar minha localização" para ver a previsão de onde está, sem digitar a cidade. O app pede permissão antes de usar o GPS. |
+| RF14 | Remover favorita | Cada cidade da tela Favoritas tem um ícone de lixeira; ao tocar nele, a cidade é removida da lista e do armazenamento do celular. |
+| RF15 | Puxar para atualizar | Na tela de previsão, arrastar a tela para baixo recarrega os dados (temperatura, chuva por hora e próximos dias). Se o carregamento falhar, a mesma ação tenta de novo. |
 
 ## 2. Requisitos Não Funcionais
 
@@ -41,6 +43,7 @@ O usuário busca uma cidade e o app responde de forma direta se **vai chover ou 
 | RNF09 | Privacidade | O app não pede login nem coleta dados pessoais. O GPS só é usado quando o usuário toca em "Usar minha localização" e permite o acesso, e a localização não é salva. |
 | RNF10 | Aparência | Ao abrir o app pela primeira vez, o tema segue o modo do celular (claro ou escuro). Depois que o usuário escolhe um tema, a escolha fica salva com AsyncStorage. |
 | RNF11 | Legibilidade | Nos dois temas, textos, fundos e bordas devem ter contraste suficiente para leitura; os avisos azul e amarelo continuam iguais. |
+| RNF12 | Identidade visual | O app tem ícone e tela de abertura próprios (nuvem com chuva sobre fundo azul), no lugar dos padrões do Expo. Eles aparecem no app instalado (build); dentro do Expo Go o celular mostra o ícone e a abertura do próprio Expo Go. |
 
 ---
 
@@ -53,8 +56,10 @@ O usuário busca uma cidade e o app responde de forma direta se **vai chover ou 
 5. O app consulta a API de previsão com a latitude e a longitude da cidade.
 6. A tela **Previsão** mostra se vai chover hoje, a temperatura atual, a chance de chuva em cada hora do dia e os próximos 7 dias.
 7. Se quiser, o usuário toca na estrela para salvar a cidade nas **Favoritas**.
-8. Pelo menu lateral, o usuário pode abrir **Favoritas** para ver a previsão de uma cidade salva sem precisar buscar de novo, ou abrir **Sobre**.
-9. Em qualquer tela, o usuário pode tocar no ícone de **sol/lua** no topo para trocar entre o tema claro e o escuro.
+8. Pelo menu lateral, o usuário pode abrir **Favoritas** para ver a previsão de uma cidade salva sem precisar buscar de novo, ou abrir **Sobre**. Na lista de Favoritas, o ícone de **lixeira** remove a cidade.
+9. Na tela de previsão, arrastar a tela para baixo **atualiza** os dados.
+10. Em qualquer tela, o usuário pode tocar no ícone de **sol/lua** no topo para trocar entre o tema claro e o escuro.
+11. Se não houver internet, o app mostra **"Sem conexão. Verifique sua internet."**
 
 ### 3.1 Diagrama de casos de uso
 
@@ -68,10 +73,14 @@ flowchart LR
     U --> UC5[Ver tela Sobre]
     U --> UC8[Alternar tema claro / escuro]
     U --> UC9[Usar minha localização]
+    U --> UC10[Remover cidade das favoritas]
+    U --> UC11[Atualizar previsão puxando a tela]
     UC9 -. estende .-> UC2
     UC2 -. inclui .-> UC6[Saber se vai chover hoje]
     UC2 -. inclui .-> UC7[Ver próximos 7 dias]
     UC4 -. estende .-> UC2
+    UC10 -. estende .-> UC4
+    UC11 -. estende .-> UC2
     UC1 -. estende .-> UC2
 ```
 
@@ -99,12 +108,13 @@ flowchart TD
     V -- Não --> E1[Mostra: Digite o nome da cidade] --> D
     V -- Sim --> G[Busca na API de cidades]
     G --> R{Encontrou cidades?}
+    R -- Erro de rede --> E4[Mostra: Sem conexão. Verifique sua internet.] --> D
     R -- Não --> E2[Mostra: Nenhuma cidade encontrada] --> D
     R -- Sim --> L[Mostra a lista de cidades]
     L --> T[Usuário toca em uma cidade]
     T --> PR[Busca a previsão na API de clima]
     PR --> OK{Carregou?}
-    OK -- Não --> E3[Mostra mensagem de erro]
+    OK -- Não --> E3[Mostra: Sem conexão. Verifique sua internet.]
     OK -- Sim --> C{Chance de chuva hoje >= 50%?}
     C -- Sim --> CH[Mostra VAI CHOVER em azul]
     C -- Não --> NC[Mostra NÃO VAI CHOVER em amarelo]
@@ -170,6 +180,35 @@ flowchart TD
     N --> PR[Abre a tela Previsão]
 ```
 
+### 3.7 Fluxograma de remover favorita
+
+```mermaid
+flowchart TD
+    A([Abrir Favoritas]) --> L[Lê a lista do AsyncStorage]
+    L --> V{Tem cidades?}
+    V -- Não --> M[Mostra: Nenhuma cidade favorita]
+    V -- Sim --> C[Mostra as cidades, cada uma com uma lixeira]
+    C --> T[Usuário toca na lixeira de uma cidade]
+    T --> R[Tira a cidade da lista na tela]
+    R --> S[Salva a lista nova no AsyncStorage]
+    S --> V
+```
+
+### 3.8 Fluxograma de puxar para atualizar
+
+```mermaid
+flowchart TD
+    A([Tela Previsão aberta]) --> B[Usuário arrasta a tela para baixo]
+    B --> C[Mostra o indicador de atualização]
+    C --> D[Busca a previsão de novo na API]
+    D --> E{Carregou?}
+    E -- Sim --> F[Atualiza temperatura, chuva por hora e próximos dias]
+    E -- Não --> G[Mostra: Sem conexão. Verifique sua internet.]
+    G --> B
+    F --> H[Esconde o indicador]
+    H --> A
+```
+
 ---
 
 ## 4. Protótipo das telas
@@ -187,12 +226,21 @@ Telas do protótipo funcional (pasta `app/`):
 | Tela | Descrição |
 |---|---|
 | 1. Buscar cidade | Campo para digitar a cidade, botão BUSCAR, botão Usar minha localização e lista de resultados. |
-| 2. Previsão (chuva) | Chance de chuva de 50% ou mais: aviso VAI CHOVER em azul, chuva por hora e próximos dias. |
+| 2. Previsão (chuva) | Chance de chuva de 50% ou mais: aviso VAI CHOVER em azul, chuva por hora e próximos dias. Arrastar a tela para baixo atualiza os dados. |
 | 3. Previsão (sem chuva) | Chance de chuva menor que 50%: aviso NÃO VAI CHOVER em amarelo. |
-| 4. Favoritas | Cidades salvas com a estrela. |
+| 4. Favoritas | Cidades salvas com a estrela, cada uma com um ícone de lixeira para remover. |
 | 5. Sobre | Informações do app e alunos responsáveis. |
 | 6. Menu lateral | Navegação entre as telas (Drawer). |
 | Ícone sol/lua | No topo de todas as telas; troca entre o tema claro e o escuro. |
+| Mensagem de erro | Sem internet, a busca e a previsão mostram "Sem conexão. Verifique sua internet." (na previsão, puxar a tela para baixo tenta de novo). |
+
+### Ícone e tela de abertura
+
+O app usa um ícone de nuvem com chuva (arquivos em `assets/`, configuração em `app.json`).
+
+| Ícone | Tela de abertura |
+|---|---|
+| ![Ícone do app](docs/icone.png) | ![Tela de abertura](docs/abertura.png) |
 
 ### Estrutura do projeto
 
@@ -207,6 +255,8 @@ src/
   api/config.ts  endereços da API
   context/TemaContext.tsx  cores do tema claro e escuro
   types/Cidade.ts
+  utils/erro.ts  mensagens de erro em português (ex.: sem conexão)
+assets/          ícone, ícone adaptativo do Android, tela de abertura e favicon
 ```
 
 ## 5. Como executar
