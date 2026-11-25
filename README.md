@@ -131,36 +131,18 @@ sequenceDiagram
 
 ## 4. Protótipo das telas
 
-O protótipo funcional está neste repositório (pasta `app/`). Abaixo, o esboço de cada tela:
+Telas do protótipo funcional (pasta `app/`):
 
-```
-+-----------------------------+   +-----------------------------+
-| ☰  Buscar cidade            |   | ☰  Juiz de Fora             |
-+-----------------------------+   +-----------------------------+
-| Chove ou não chove?         |   | Juiz de Fora            ★   |
-| +-------------------------+ |   | Minas Gerais - Brasil       |
-| | Juiz de Fora            | |   | +-------------------------+ |
-| +-------------------------+ |   | |       VAI CHOVER        | |
-| +-------------------------+ |   | | Chance de chuva: 80%    | |
-| |         BUSCAR          | |   | | Temperatura agora: 23°C | |
-| +-------------------------+ |   | +-------------------------+ |
-| Juiz de Fora                |   | Próximos dias               |
-| Minas Gerais - Brasil       |   | 25/11  ☂  80% - 12 mm 18/27 |
-| --------------------------- |   | 26/11  ☀  10% - 0 mm  17/29 |
-| ...                         |   | 27/11  ☂  60% - 4 mm  18/26 |
-+-----------------------------+   +-----------------------------+
+![Protótipo das telas](docs/prototipo.png)
 
-+-----------------------------+   +-----------------------------+
-| ☰  Favoritas                |   | ☰  Sobre                    |
-+-----------------------------+   +-----------------------------+
-| Juiz de Fora                |   | Sobre                       |
-| Minas Gerais - Brasil       |   | Aplicativo desenvolvido...  |
-| --------------------------- |   | Dados obtidos da Open-Meteo |
-| Rio de Janeiro              |   | Alunos responsáveis         |
-| Rio de Janeiro - Brasil     |   | Éverton Coelho              |
-| --------------------------- |   | Andrew                      |
-+-----------------------------+   +-----------------------------+
-```
+| Tela | Descrição |
+|---|---|
+| 1. Buscar cidade | Campo para digitar a cidade, botão BUSCAR e lista de resultados. |
+| 2. Previsão (chuva) | Chance de chuva de 50% ou mais: aviso VAI CHOVER em azul. |
+| 3. Previsão (sem chuva) | Chance de chuva menor que 50%: aviso NÃO VAI CHOVER em amarelo. |
+| 4. Favoritas | Cidades salvas com a estrela. |
+| 5. Sobre | Informações do app e alunos responsáveis. |
+| 6. Menu lateral | Navegação entre as telas (Drawer). |
 
 ### Estrutura do projeto
 
