@@ -22,6 +22,7 @@ O usuário busca uma cidade e o app responde de forma direta se **vai chover ou 
 | RF08 | Listar favoritas | O app tem uma tela com as cidades favoritas; ao tocar em uma, abre a previsão dela. |
 | RF09 | Tela Sobre | O app tem uma tela com informações do aplicativo e dos alunos responsáveis. |
 | RF10 | Mensagens de erro | O app avisa quando nenhuma cidade for encontrada ou quando não for possível carregar os dados. |
+| RF11 | Alternar tema claro/escuro | O usuário pode trocar entre o tema claro e o escuro tocando no ícone de sol/lua no topo de qualquer tela. |
 
 ## 2. Requisitos Não Funcionais
 
@@ -36,6 +37,8 @@ O usuário busca uma cidade e o app responde de forma direta se **vai chover ou 
 | RNF07 | Usabilidade | A resposta principal ("VAI CHOVER" / "NÃO VAI CHOVER") deve aparecer em destaque, com cor azul para chuva e amarela para tempo seco. |
 | RNF08 | Idioma | Todas as telas em português do Brasil. |
 | RNF09 | Privacidade | O app não pede login nem coleta dados pessoais; a localização é escolhida pelo usuário na busca. |
+| RNF10 | Aparência | Ao abrir o app pela primeira vez, o tema segue o modo do celular (claro ou escuro). Depois que o usuário escolhe um tema, a escolha fica salva com AsyncStorage. |
+| RNF11 | Legibilidade | Nos dois temas, textos, fundos e bordas devem ter contraste suficiente para leitura; os avisos azul e amarelo continuam iguais. |
 
 ---
 
@@ -49,6 +52,7 @@ O usuário busca uma cidade e o app responde de forma direta se **vai chover ou 
 6. A tela **Previsão** mostra se vai chover hoje, a temperatura atual e os próximos 7 dias.
 7. Se quiser, o usuário toca na estrela para salvar a cidade nas **Favoritas**.
 8. Pelo menu lateral, o usuário pode abrir **Favoritas** para ver a previsão de uma cidade salva sem precisar buscar de novo, ou abrir **Sobre**.
+9. Em qualquer tela, o usuário pode tocar no ícone de **sol/lua** no topo para trocar entre o tema claro e o escuro.
 
 ### 3.1 Diagrama de casos de uso
 
@@ -60,6 +64,7 @@ flowchart LR
     U --> UC3[Favoritar / desfavoritar cidade]
     U --> UC4[Ver cidades favoritas]
     U --> UC5[Ver tela Sobre]
+    U --> UC8[Alternar tema claro / escuro]
     UC2 -. inclui .-> UC6[Saber se vai chover hoje]
     UC2 -. inclui .-> UC7[Ver próximos 7 dias]
     UC4 -. estende .-> UC2
@@ -77,6 +82,7 @@ flowchart TD
     M <--> S[Sobre]
     B -- toca na cidade --> P[Previsão]
     F -- toca na cidade --> P
+    T((Ícone sol/lua no topo)) -. troca o tema de todas as telas .-> M
 ```
 
 ### 3.3 Fluxograma da busca até a previsão
@@ -127,13 +133,37 @@ sequenceDiagram
     App-->>U: Estrela preenchida ou vazia
 ```
 
+### 3.5 Fluxograma da troca de tema
+
+```mermaid
+flowchart TD
+    A([Abrir app]) --> S{Existe tema salvo no AsyncStorage?}
+    S -- Sim --> U[Usa o tema salvo]
+    S -- Não --> C{Celular está no modo escuro?}
+    C -- Sim --> E[Tema escuro]
+    C -- Não --> L[Tema claro]
+    U --> T[Telas exibidas com as cores do tema]
+    E --> T
+    L --> T
+    T --> B[Usuário toca no ícone sol/lua]
+    B --> I[Inverte o tema]
+    I --> G[Salva a escolha no AsyncStorage]
+    G --> T
+```
+
 ---
 
 ## 4. Protótipo das telas
 
 Telas do protótipo funcional (pasta `app/`):
 
-![Protótipo das telas](docs/prototipo.png)
+### Tema claro
+
+![Protótipo das telas - tema claro](docs/prototipo.png)
+
+### Tema escuro
+
+![Protótipo das telas - tema escuro](docs/prototipo-escuro.png)
 
 | Tela | Descrição |
 |---|---|
@@ -143,18 +173,20 @@ Telas do protótipo funcional (pasta `app/`):
 | 4. Favoritas | Cidades salvas com a estrela. |
 | 5. Sobre | Informações do app e alunos responsáveis. |
 | 6. Menu lateral | Navegação entre as telas (Drawer). |
+| Ícone sol/lua | No topo de todas as telas; troca entre o tema claro e o escuro. |
 
 ### Estrutura do projeto
 
 ```
 app/
-  _layout.tsx    menu lateral (Drawer)
+  _layout.tsx    menu lateral (Drawer) e botão de tema
   index.tsx      tela Buscar cidade
   previsao.tsx   tela Previsão
   favoritas.tsx  tela Favoritas
   sobre.tsx      tela Sobre
 src/
   api/config.ts  endereços da API
+  context/TemaContext.tsx  cores do tema claro e escuro
   types/Cidade.ts
 ```
 

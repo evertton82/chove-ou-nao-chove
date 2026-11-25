@@ -3,8 +3,10 @@ import { View, Text, TextInput, Pressable, FlatList, ActivityIndicator } from 'r
 import { router } from 'expo-router';
 import { Cidade } from '../src/types/Cidade';
 import { URL_CIDADES } from '../src/api/config';
+import { useTema } from '../src/context/TemaContext';
 
 export default function BuscarScreen() {
+  const { cores } = useTema();
   const [texto, setTexto] = useState('');
   const [cidades, setCidades] = useState<Cidade[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(false);
@@ -46,14 +48,15 @@ export default function BuscarScreen() {
   };
 
   return (
-    <View style={{ flex: 1, backgroundColor: '#ffffff', padding: 16 }}>
-      <Text style={{ fontSize: 22, fontWeight: 'bold', marginBottom: 12 }}>Chove ou não chove?</Text>
+    <View style={{ flex: 1, backgroundColor: cores.fundo, padding: 16 }}>
+      <Text style={{ fontSize: 22, fontWeight: 'bold', marginBottom: 12, color: cores.texto }}>Chove ou não chove?</Text>
       <TextInput
         value={texto}
         onChangeText={setTexto}
         placeholder="Digite a cidade. Ex: Juiz de Fora"
+        placeholderTextColor={cores.textoFraco}
         onSubmitEditing={buscar}
-        style={{ borderWidth: 1, borderColor: '#cccccc', padding: 10, fontSize: 16, marginBottom: 12 }}
+        style={{ borderWidth: 1, borderColor: cores.campo, padding: 10, fontSize: 16, marginBottom: 12, color: cores.texto }}
       />
       <Pressable onPress={buscar} style={{ backgroundColor: '#1565c0', padding: 12, alignItems: 'center' }}>
         <Text style={{ color: '#ffffff', fontWeight: 'bold' }}>BUSCAR</Text>
@@ -68,9 +71,9 @@ export default function BuscarScreen() {
         keyExtractor={(item) => String(item.id)}
         style={{ marginTop: 12 }}
         renderItem={({ item }) => (
-          <Pressable onPress={() => abrirPrevisao(item)} style={{ paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: '#dddddd' }}>
-            <Text style={{ fontSize: 16, fontWeight: 'bold' }}>{item.nome}</Text>
-            <Text style={{ color: '#666666' }}>{item.estado} - {item.pais}</Text>
+          <Pressable onPress={() => abrirPrevisao(item)} style={{ paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: cores.borda }}>
+            <Text style={{ fontSize: 16, fontWeight: 'bold', color: cores.texto }}>{item.nome}</Text>
+            <Text style={{ color: cores.textoFraco }}>{item.estado} - {item.pais}</Text>
           </Pressable>
         )}
       />

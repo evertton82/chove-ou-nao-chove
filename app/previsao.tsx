@@ -5,6 +5,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { MaterialIcons } from '@expo/vector-icons';
 import { Cidade } from '../src/types/Cidade';
 import { URL_PREVISAO } from '../src/api/config';
+import { useTema } from '../src/context/TemaContext';
 
 type Dia = {
   data: string;
@@ -15,6 +16,7 @@ type Dia = {
 };
 
 export default function PrevisaoScreen() {
+  const { cores } = useTema();
   const params = useLocalSearchParams();
   const navigation = useNavigation();
   const [dias, setDias] = useState<Dia[]>([]);
@@ -80,7 +82,7 @@ export default function PrevisaoScreen() {
 
   if (isLoading) {
     return (
-      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#ffffff' }}>
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: cores.fundo }}>
         <ActivityIndicator size="large" />
       </View>
     );
@@ -88,7 +90,7 @@ export default function PrevisaoScreen() {
 
   if (error) {
     return (
-      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#ffffff' }}>
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: cores.fundo }}>
         <Text style={{ color: 'red' }}>Erro: {error}</Text>
       </View>
     );
@@ -98,11 +100,11 @@ export default function PrevisaoScreen() {
   const vaiChover = hoje && hoje.chance >= 50;
 
   return (
-    <View style={{ flex: 1, backgroundColor: '#ffffff', padding: 16 }}>
+    <View style={{ flex: 1, backgroundColor: cores.fundo, padding: 16 }}>
       <View style={{ flexDirection: 'row', alignItems: 'center' }}>
         <View style={{ flex: 1 }}>
-          <Text style={{ fontSize: 22, fontWeight: 'bold' }}>{cidade.nome}</Text>
-          <Text style={{ color: '#666666' }}>{cidade.estado} - {cidade.pais}</Text>
+          <Text style={{ fontSize: 22, fontWeight: 'bold', color: cores.texto }}>{cidade.nome}</Text>
+          <Text style={{ color: cores.textoFraco }}>{cidade.estado} - {cidade.pais}</Text>
         </View>
         <Pressable onPress={favoritar}>
           <MaterialIcons name={favorita ? 'star' : 'star-border'} size={30} color={favorita ? '#f1c40f' : '#999999'} />
@@ -115,16 +117,16 @@ export default function PrevisaoScreen() {
         <Text style={{ color: '#ffffff', fontSize: 16 }}>Temperatura agora: {temperatura}°C</Text>
       </View>
 
-      <Text style={{ fontSize: 18, fontWeight: 'bold', marginTop: 20, marginBottom: 8 }}>Próximos dias</Text>
+      <Text style={{ fontSize: 18, fontWeight: 'bold', marginTop: 20, marginBottom: 8, color: cores.texto }}>Próximos dias</Text>
       <FlatList
         data={dias}
         keyExtractor={(item) => item.data}
         renderItem={({ item }) => (
-          <View style={{ flexDirection: 'row', alignItems: 'center', paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: '#dddddd' }}>
-            <Text style={{ width: 60, fontWeight: 'bold' }}>{formatarData(item.data)}</Text>
+          <View style={{ flexDirection: 'row', alignItems: 'center', paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: cores.borda }}>
+            <Text style={{ width: 60, fontWeight: 'bold', color: cores.texto }}>{formatarData(item.data)}</Text>
             <MaterialIcons name={item.chance >= 50 ? 'umbrella' : 'wb-sunny'} size={22} color={item.chance >= 50 ? '#1565c0' : '#f9a825'} />
-            <Text style={{ flex: 1, marginLeft: 8 }}>{item.chance}% - {item.chuva} mm</Text>
-            <Text>{Math.round(item.minima)}° / {Math.round(item.maxima)}°</Text>
+            <Text style={{ flex: 1, marginLeft: 8, color: cores.texto }}>{item.chance}% - {item.chuva} mm</Text>
+            <Text style={{ color: cores.texto }}>{Math.round(item.minima)}° / {Math.round(item.maxima)}°</Text>
           </View>
         )}
       />
