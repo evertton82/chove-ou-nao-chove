@@ -23,7 +23,13 @@
     },
     "plugins": [
       "expo-router",
-      "expo-font"
+      "expo-font",
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "O app usa sua localização para mostrar se vai chover onde você está."
+        }
+      ]
     ]
   }
 }
