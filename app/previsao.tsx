@@ -131,6 +131,22 @@ export default function PrevisaoScreen() {
         <Text style={{ color: '#ffffff', fontSize: 16 }}>Temperatura agora: {temperatura}°C</Text>
       </View>
 
+      <Text style={{ fontSize: 18, fontWeight: 'bold', marginTop: 20, marginBottom: 8, color: cores.texto }}>Chuva por hora</Text>
+      <FlatList
+        horizontal
+        data={horas}
+        keyExtractor={(item) => item.hora}
+        showsHorizontalScrollIndicator={false}
+        style={{ flexGrow: 0 }}
+        renderItem={({ item }) => (
+          <View style={{ width: 64, alignItems: 'center', padding: 8, marginRight: 8, borderWidth: 1, borderColor: cores.borda, borderRadius: 8 }}>
+            <Text style={{ fontWeight: 'bold', color: cores.texto }}>{item.hora.slice(11, 13)}h</Text>
+            <MaterialIcons name={item.chance >= 50 ? 'umbrella' : 'wb-sunny'} size={22} color={item.chance >= 50 ? '#1565c0' : '#f9a825'} style={{ marginVertical: 4 }} />
+            <Text style={{ color: cores.texto }}>{item.chance}%</Text>
+          </View>
+        )}
+      />
+
       <Text style={{ fontSize: 18, fontWeight: 'bold', marginTop: 20, marginBottom: 8, color: cores.texto }}>Próximos dias</Text>
       <FlatList
         data={dias}
