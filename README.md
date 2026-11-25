@@ -23,6 +23,7 @@ O usuário busca uma cidade e o app responde de forma direta se **vai chover ou 
 | RF09 | Tela Sobre | O app tem uma tela com informações do aplicativo e dos alunos responsáveis. |
 | RF10 | Mensagens de erro | O app avisa quando nenhuma cidade for encontrada ou quando não for possível carregar os dados. |
 | RF11 | Alternar tema claro/escuro | O usuário pode trocar entre o tema claro e o escuro tocando no ícone de sol/lua no topo de qualquer tela. |
+| RF12 | Chuva por hora | A tela de previsão mostra a chance de chuva (%) de cada hora que ainda falta no dia, em uma lista horizontal. |
 
 ## 2. Requisitos Não Funcionais
 
@@ -49,7 +50,7 @@ O usuário busca uma cidade e o app responde de forma direta se **vai chover ou 
 3. O app consulta a API de geocodificação da Open-Meteo e mostra a lista de cidades.
 4. O usuário toca na cidade desejada.
 5. O app consulta a API de previsão com a latitude e a longitude da cidade.
-6. A tela **Previsão** mostra se vai chover hoje, a temperatura atual e os próximos 7 dias.
+6. A tela **Previsão** mostra se vai chover hoje, a temperatura atual, a chance de chuva em cada hora do dia e os próximos 7 dias.
 7. Se quiser, o usuário toca na estrela para salvar a cidade nas **Favoritas**.
 8. Pelo menu lateral, o usuário pode abrir **Favoritas** para ver a previsão de uma cidade salva sem precisar buscar de novo, ou abrir **Sobre**.
 9. Em qualquer tela, o usuário pode tocar no ícone de **sol/lua** no topo para trocar entre o tema claro e o escuro.
@@ -103,8 +104,9 @@ flowchart TD
     OK -- Sim --> C{Chance de chuva hoje >= 50%?}
     C -- Sim --> CH[Mostra VAI CHOVER em azul]
     C -- Não --> NC[Mostra NÃO VAI CHOVER em amarelo]
-    CH --> P7[Lista os próximos 7 dias]
-    NC --> P7
+    CH --> HR[Mostra a chance de chuva por hora]
+    NC --> HR
+    HR --> P7[Lista os próximos 7 dias]
     P7 --> FIM([Fim])
 ```
 
@@ -124,7 +126,7 @@ sequenceDiagram
     App-->>U: Mostra a lista
     U->>App: Toca em uma cidade
     App->>Clima: GET /v1/forecast?latitude&longitude
-    Clima-->>App: Temperatura atual e previsão diária
+    Clima-->>App: Temperatura atual, chuva por hora e previsão diária
     App->>AS: Verifica se a cidade é favorita
     AS-->>App: Sim / Não
     App-->>U: VAI CHOVER ou NÃO VAI CHOVER + 7 dias
