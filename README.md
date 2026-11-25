@@ -39,6 +39,143 @@ O usuário busca uma cidade e o app responde de forma direta se **vai chover ou 
 
 ---
 
+## 3. Fluxo de funcionamento
+
+1. O usuário abre o app e cai na tela **Buscar cidade**.
+2. Digita o nome da cidade e toca em **BUSCAR**.
+3. O app consulta a API de geocodificação da Open-Meteo e mostra a lista de cidades.
+4. O usuário toca na cidade desejada.
+5. O app consulta a API de previsão com a latitude e a longitude da cidade.
+6. A tela **Previsão** mostra se vai chover hoje, a temperatura atual e os próximos 7 dias.
+7. Se quiser, o usuário toca na estrela para salvar a cidade nas **Favoritas**.
+8. Pelo menu lateral, o usuário pode abrir **Favoritas** para ver a previsão de uma cidade salva sem precisar buscar de novo, ou abrir **Sobre**.
+
+### 3.1 Diagrama de casos de uso
+
+```mermaid
+flowchart LR
+    U((Usuário))
+    U --> UC1[Buscar cidade]
+    U --> UC2[Ver previsão]
+    U --> UC3[Favoritar / desfavoritar cidade]
+    U --> UC4[Ver cidades favoritas]
+    U --> UC5[Ver tela Sobre]
+    UC2 -. inclui .-> UC6[Saber se vai chover hoje]
+    UC2 -. inclui .-> UC7[Ver próximos 7 dias]
+    UC4 -. estende .-> UC2
+    UC1 -. estende .-> UC2
+```
+
+### 3.2 Diagrama de navegação
+
+```mermaid
+flowchart TD
+    A[Abrir app] --> B[Buscar cidade]
+    M{{Menu lateral - Drawer}}
+    B <--> M
+    M <--> F[Favoritas]
+    M <--> S[Sobre]
+    B -- toca na cidade --> P[Previsão]
+    F -- toca na cidade --> P
+```
+
+### 3.3 Fluxograma da busca até a previsão
+
+```mermaid
+flowchart TD
+    I([Início]) --> D[Usuário digita a cidade]
+    D --> V{Tem 2 letras ou mais?}
+    V -- Não --> E1[Mostra: Digite o nome da cidade] --> D
+    V -- Sim --> G[Busca na API de cidades]
+    G --> R{Encontrou cidades?}
+    R -- Não --> E2[Mostra: Nenhuma cidade encontrada] --> D
+    R -- Sim --> L[Mostra a lista de cidades]
+    L --> T[Usuário toca em uma cidade]
+    T --> PR[Busca a previsão na API de clima]
+    PR --> OK{Carregou?}
+    OK -- Não --> E3[Mostra mensagem de erro]
+    OK -- Sim --> C{Chance de chuva hoje >= 50%?}
+    C -- Sim --> CH[Mostra VAI CHOVER em azul]
+    C -- Não --> NC[Mostra NÃO VAI CHOVER em amarelo]
+    CH --> P7[Lista os próximos 7 dias]
+    NC --> P7
+    P7 --> FIM([Fim])
+```
+
+### 3.4 Diagrama de sequência
+
+```mermaid
+sequenceDiagram
+    actor U as Usuário
+    participant App
+    participant Geo as Open-Meteo Geocoding
+    participant Clima as Open-Meteo Forecast
+    participant AS as AsyncStorage
+
+    U->>App: Digita a cidade e toca em BUSCAR
+    App->>Geo: GET /v1/search?name=cidade
+    Geo-->>App: Lista de cidades (nome, estado, país, lat, lon)
+    App-->>U: Mostra a lista
+    U->>App: Toca em uma cidade
+    App->>Clima: GET /v1/forecast?latitude&longitude
+    Clima-->>App: Temperatura atual e previsão diária
+    App->>AS: Verifica se a cidade é favorita
+    AS-->>App: Sim / Não
+    App-->>U: VAI CHOVER ou NÃO VAI CHOVER + 7 dias
+    U->>App: Toca na estrela
+    App->>AS: Salva ou remove a cidade
+    App-->>U: Estrela preenchida ou vazia
+```
+
+---
+
+## 4. Protótipo das telas
+
+O protótipo funcional está neste repositório (pasta `app/`). Abaixo, o esboço de cada tela:
+
+```
++-----------------------------+   +-----------------------------+
+| ☰  Buscar cidade            |   | ☰  Juiz de Fora             |
++-----------------------------+   +-----------------------------+
+| Chove ou não chove?         |   | Juiz de Fora            ★   |
+| +-------------------------+ |   | Minas Gerais - Brasil       |
+| | Juiz de Fora            | |   | +-------------------------+ |
+| +-------------------------+ |   | |       VAI CHOVER        | |
+| +-------------------------+ |   | | Chance de chuva: 80%    | |
+| |         BUSCAR          | |   | | Temperatura agora: 23°C | |
+| +-------------------------+ |   | +-------------------------+ |
+| Juiz de Fora                |   | Próximos dias               |
+| Minas Gerais - Brasil       |   | 25/11  ☂  80% - 12 mm 18/27 |
+| --------------------------- |   | 26/11  ☀  10% - 0 mm  17/29 |
+| ...                         |   | 27/11  ☂  60% - 4 mm  18/26 |
++-----------------------------+   +-----------------------------+
+
++-----------------------------+   +-----------------------------+
+| ☰  Favoritas                |   | ☰  Sobre                    |
++-----------------------------+   +-----------------------------+
+| Juiz de Fora                |   | Sobre                       |
+| Minas Gerais - Brasil       |   | Aplicativo desenvolvido...  |
+| --------------------------- |   | Dados obtidos da Open-Meteo |
+| Rio de Janeiro              |   | Alunos responsáveis         |
+| Rio de Janeiro - Brasil     |   | Éverton Coelho              |
+| --------------------------- |   | Andrew                      |
++-----------------------------+   +-----------------------------+
+```
+
+### Estrutura do projeto
+
+```
+app/
+  _layout.tsx    menu lateral (Drawer)
+  index.tsx      tela Buscar cidade
+  previsao.tsx   tela Previsão
+  favoritas.tsx  tela Favoritas
+  sobre.tsx      tela Sobre
+src/
+  api/config.ts  endereços da API
+  types/Cidade.ts
+```
+
 ## 5. Como executar
 
 ```bash
