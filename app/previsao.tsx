@@ -15,11 +15,17 @@ type Dia = {
   maxima: number;
 };
 
+type Hora = {
+  hora: string;
+  chance: number;
+};
+
 export default function PrevisaoScreen() {
   const { cores } = useTema();
   const params = useLocalSearchParams();
   const navigation = useNavigation();
   const [dias, setDias] = useState<Dia[]>([]);
+  const [horas, setHoras] = useState<Hora[]>([]);
   const [temperatura, setTemperatura] = useState<number | null>(null);
   const [favorita, setFavorita] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState<boolean>(true);
@@ -39,7 +45,7 @@ export default function PrevisaoScreen() {
     setIsLoading(true);
     setError(null);
 
-    fetch(`${URL_PREVISAO}?latitude=${cidade.latitude}&longitude=${cidade.longitude}&current=temperature_2m&daily=precipitation_probability_max,precipitation_sum,temperature_2m_min,temperature_2m_max&timezone=auto`)
+    fetch(`${URL_PREVISAO}?latitude=${cidade.latitude}&longitude=${cidade.longitude}&current=temperature_2m&hourly=precipitation_probability&daily=precipitation_probability_max,precipitation_sum,temperature_2m_min,temperature_2m_max&timezone=auto`)
       .then((res) => res.json())
       .then((data) => {
         const lista = data.daily.time.map((dataDia: string, i: number) => ({
@@ -50,6 +56,14 @@ export default function PrevisaoScreen() {
           maxima: data.daily.temperature_2m_max[i],
         }));
         setDias(lista);
+        const agora = data.current.time.slice(0, 13);
+        const listaHoras = data.hourly.time
+          .map((dataHora: string, i: number) => ({
+            hora: dataHora,
+            chance: data.hourly.precipitation_probability[i] ?? 0,
+          }))
+          .filter((item: Hora) => item.hora.startsWith(lista[0].data) && item.hora.slice(0, 13) >= agora);
+        setHoras(listaHoras);
         setTemperatura(data.current.temperature_2m);
       })
       .catch((err) => setError(err.message))
