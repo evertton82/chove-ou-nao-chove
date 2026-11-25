@@ -2,12 +2,13 @@ import { useState } from 'react';
 import { View, Text, TextInput, Pressable, FlatList, ActivityIndicator } from 'react-native';
 import { router } from 'expo-router';
 import * as Location from 'expo-location';
+import { MaterialIcons } from '@expo/vector-icons';
 import { Cidade } from '../src/types/Cidade';
 import { URL_CIDADES } from '../src/api/config';
 import { useTema } from '../src/context/TemaContext';
 
 export default function BuscarScreen() {
-  const { cores } = useTema();
+  const { escuro, cores } = useTema();
   const [texto, setTexto] = useState('');
   const [cidades, setCidades] = useState<Cidade[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(false);
@@ -96,6 +97,10 @@ export default function BuscarScreen() {
       />
       <Pressable onPress={buscar} style={{ backgroundColor: '#1565c0', padding: 12, alignItems: 'center' }}>
         <Text style={{ color: '#ffffff', fontWeight: 'bold' }}>BUSCAR</Text>
+      </Pressable>
+      <Pressable onPress={usarLocalizacao} style={{ flexDirection: 'row', justifyContent: 'center', alignItems: 'center', borderWidth: 1, borderColor: '#1565c0', padding: 12, marginTop: 8 }}>
+        <MaterialIcons name="my-location" size={18} color={escuro ? '#64b5f6' : '#1565c0'} />
+        <Text style={{ color: escuro ? '#64b5f6' : '#1565c0', fontWeight: 'bold', marginLeft: 6 }}>USAR MINHA LOCALIZAÇÃO</Text>
       </Pressable>
 
       {isLoading && <ActivityIndicator size="large" style={{ marginTop: 16 }} />}
