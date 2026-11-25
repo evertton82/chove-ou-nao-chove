@@ -170,7 +170,7 @@ Telas do protótipo funcional (pasta `app/`):
 | Tela | Descrição |
 |---|---|
 | 1. Buscar cidade | Campo para digitar a cidade, botão BUSCAR e lista de resultados. |
-| 2. Previsão (chuva) | Chance de chuva de 50% ou mais: aviso VAI CHOVER em azul. |
+| 2. Previsão (chuva) | Chance de chuva de 50% ou mais: aviso VAI CHOVER em azul, chuva por hora e próximos dias. |
 | 3. Previsão (sem chuva) | Chance de chuva menor que 50%: aviso NÃO VAI CHOVER em amarelo. |
 | 4. Favoritas | Cidades salvas com a estrela. |
 | 5. Sobre | Informações do app e alunos responsáveis. |
