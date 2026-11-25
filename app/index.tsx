@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { View, Text, TextInput, Pressable, FlatList, ActivityIndicator } from 'react-native';
 import { router } from 'expo-router';
+import * as Location from 'expo-location';
 import { Cidade } from '../src/types/Cidade';
 import { URL_CIDADES } from '../src/api/config';
 import { useTema } from '../src/context/TemaContext';
@@ -41,6 +42,41 @@ export default function BuscarScreen() {
       })
       .catch((err) => setError(err.message))
       .finally(() => setIsLoading(false));
+  };
+
+  const usarLocalizacao = async () => {
+    setError(null);
+
+    const { status } = await Location.requestForegroundPermissionsAsync();
+    if (status !== 'granted') {
+      setError('Permissão de localização negada.');
+      return;
+    }
+
+    setIsLoading(true);
+
+    try {
+      const posicao = await Location.getCurrentPositionAsync({});
+      const { latitude, longitude } = posicao.coords;
+      let nome = 'Minha localização';
+      let estado = '';
+      let pais = '';
+
+      try {
+        const enderecos = await Location.reverseGeocodeAsync({ latitude, longitude });
+        if (enderecos.length > 0) {
+          nome = enderecos[0].city ?? enderecos[0].subregion ?? nome;
+          estado = enderecos[0].region ?? '';
+          pais = enderecos[0].country ?? '';
+        }
+      } catch {}
+
+      abrirPrevisao({ id: 0, nome, estado, pais, latitude, longitude });
+    } catch {
+      setError('Não foi possível pegar sua localização.');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const abrirPrevisao = (cidade: Cidade) => {
