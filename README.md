@@ -24,6 +24,7 @@ O usuário busca uma cidade e o app responde de forma direta se **vai chover ou 
 | RF10 | Mensagens de erro | O app avisa quando nenhuma cidade for encontrada ou quando não for possível carregar os dados. |
 | RF11 | Alternar tema claro/escuro | O usuário pode trocar entre o tema claro e o escuro tocando no ícone de sol/lua no topo de qualquer tela. |
 | RF12 | Chuva por hora | A tela de previsão mostra a chance de chuva (%) de cada hora que ainda falta no dia, em uma lista horizontal. |
+| RF13 | Usar minha localização | O usuário pode tocar em "Usar minha localização" para ver a previsão de onde está, sem digitar a cidade. O app pede permissão antes de usar o GPS. |
 
 ## 2. Requisitos Não Funcionais
 
@@ -37,7 +38,7 @@ O usuário busca uma cidade e o app responde de forma direta se **vai chover ou 
 | RNF06 | Desempenho | Enquanto os dados carregam, o app mostra um indicador de carregamento. A resposta deve aparecer em poucos segundos com uma conexão normal. |
 | RNF07 | Usabilidade | A resposta principal ("VAI CHOVER" / "NÃO VAI CHOVER") deve aparecer em destaque, com cor azul para chuva e amarela para tempo seco. |
 | RNF08 | Idioma | Todas as telas em português do Brasil. |
-| RNF09 | Privacidade | O app não pede login nem coleta dados pessoais; a localização é escolhida pelo usuário na busca. |
+| RNF09 | Privacidade | O app não pede login nem coleta dados pessoais. O GPS só é usado quando o usuário toca em "Usar minha localização" e permite o acesso, e a localização não é salva. |
 | RNF10 | Aparência | Ao abrir o app pela primeira vez, o tema segue o modo do celular (claro ou escuro). Depois que o usuário escolhe um tema, a escolha fica salva com AsyncStorage. |
 | RNF11 | Legibilidade | Nos dois temas, textos, fundos e bordas devem ter contraste suficiente para leitura; os avisos azul e amarelo continuam iguais. |
 
@@ -46,7 +47,7 @@ O usuário busca uma cidade e o app responde de forma direta se **vai chover ou 
 ## 3. Fluxo de funcionamento
 
 1. O usuário abre o app e cai na tela **Buscar cidade**.
-2. Digita o nome da cidade e toca em **BUSCAR**.
+2. Digita o nome da cidade e toca em **BUSCAR**, ou toca em **Usar minha localização** para ir direto para a previsão de onde está (o app pede permissão na primeira vez).
 3. O app consulta a API de geocodificação da Open-Meteo e mostra a lista de cidades.
 4. O usuário toca na cidade desejada.
 5. O app consulta a API de previsão com a latitude e a longitude da cidade.
@@ -66,6 +67,8 @@ flowchart LR
     U --> UC4[Ver cidades favoritas]
     U --> UC5[Ver tela Sobre]
     U --> UC8[Alternar tema claro / escuro]
+    U --> UC9[Usar minha localização]
+    UC9 -. estende .-> UC2
     UC2 -. inclui .-> UC6[Saber se vai chover hoje]
     UC2 -. inclui .-> UC7[Ver próximos 7 dias]
     UC4 -. estende .-> UC2
@@ -82,6 +85,7 @@ flowchart TD
     M <--> F[Favoritas]
     M <--> S[Sobre]
     B -- toca na cidade --> P[Previsão]
+    B -- usar minha localização --> P
     F -- toca na cidade --> P
     T((Ícone sol/lua no topo)) -. troca o tema de todas as telas .-> M
 ```
@@ -153,6 +157,19 @@ flowchart TD
     G --> T
 ```
 
+### 3.6 Fluxograma da localização
+
+```mermaid
+flowchart TD
+    A([Toca em Usar minha localização]) --> P{Usuário permitiu o acesso?}
+    P -- Não --> E1[Mostra: Permissão de localização negada]
+    P -- Sim --> G[Pega latitude e longitude pelo GPS]
+    G --> OK{Conseguiu?}
+    OK -- Não --> E2[Mostra: Não foi possível pegar sua localização]
+    OK -- Sim --> N[Descobre o nome da cidade pelas coordenadas]
+    N --> PR[Abre a tela Previsão]
+```
+
 ---
 
 ## 4. Protótipo das telas
@@ -169,7 +186,7 @@ Telas do protótipo funcional (pasta `app/`):
 
 | Tela | Descrição |
 |---|---|
-| 1. Buscar cidade | Campo para digitar a cidade, botão BUSCAR e lista de resultados. |
+| 1. Buscar cidade | Campo para digitar a cidade, botão BUSCAR, botão Usar minha localização e lista de resultados. |
 | 2. Previsão (chuva) | Chance de chuva de 50% ou mais: aviso VAI CHOVER em azul, chuva por hora e próximos dias. |
 | 3. Previsão (sem chuva) | Chance de chuva menor que 50%: aviso NÃO VAI CHOVER em amarelo. |
 | 4. Favoritas | Cidades salvas com a estrela. |
